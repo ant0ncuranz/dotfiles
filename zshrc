@@ -3756,16 +3756,11 @@ PROMPT='[%B%F{yellow}%n%f%b@%m] %F{yellow}%1~%f %# '
 # Enable autocomplete menu
 zstyle ':completion:*' menu select
 
-# printf "\033]6;1;bg;red;brightness;40\a"
-# printf "\033]6;1;bg;green;brightness;44\a"
-# printf "\033]6;1;bg;blue;brightness;52\a"
 printf "\033]6;1;bg;red;brightness;40\a"
 printf "\033]6;1;bg;green;brightness;40\a"
 printf "\033]6;1;bg;blue;brightness;40\a"
 
-# figlet "i bims" | lolcat -S 1
-
-# mopidy &
+alias vim="nvim"
 
 ## END OF FILE #################################################################
 # vim:filetype=zsh foldmethod=marker autoindent expandtab shiftwidth=4

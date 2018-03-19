@@ -1,60 +1,67 @@
-set nocompatible              " be iMproved, required
-filetype off                  " required
-syntax enable
+set nocompatible
+
+" open Tagbar if .java file
+autocmd VimEnter * if &ft ==# 'java' | call JavaCommands() | endif
+
+:function JavaCommands()
+:	Tagbar
+:endfunction
+
+let g:term_buf = 0
+let g:term_win = 0
+
+function! Term_toggle(height)
+    if win_gotoid(g:term_win)
+        hide
+    else
+        rightbelow new
+        exec "resize " . a:height
+        try
+            exec "buffer " . g:term_buf
+        catch
+            call termopen($SHELL, {"detach": 0})
+            let g:term_buf = bufnr("")
+        endtry
+        startinsert!
+        let g:term_win = win_getid()
+    endif
+endfunction
+
 set mouse=a
 set nu
 set backspace=2
-
 set numberwidth=3
 set tabstop=4
 set softtabstop=0 noexpandtab
 set shiftwidth=4
 set laststatus=2
 set ttimeoutlen=50
+set background=dark
+set autowrite
+set noshowmode
 
 let g:lightline = {
       \ 'colorscheme': 'darcula',
       \ }
 
-" hi LineNr ctermfg=blue
-" hi SignColumn ctermbg=NONE
-" hi VertSplit ctermbg=NONE cterm=NONE
-
-" set fillchars+=vert:\
-
-set background=dark
-hi vertsplit ctermfg=238 ctermbg=235
-hi LineNr ctermfg=237
-hi StatusLine ctermfg=235 ctermbg=245
-hi StatusLineNC ctermfg=235 ctermbg=237
-hi Search ctermbg=58 ctermfg=15
-hi Default ctermfg=1
-hi clear SignColumn
-hi SignColumn ctermbg=235
-hi GitGutterAdd ctermbg=235 ctermfg=245
-hi GitGutterChange ctermbg=235 ctermfg=245
-hi GitGutterDelete ctermbg=235 ctermfg=245
-hi GitGutterChangeDelete ctermbg=235 ctermfg=245
-hi EndOfBuffer ctermfg=237 ctermbg=235
-
-set autowrite
-set noshowmode
-
-" let g:BASH_Ctrl_j = 'off'
-
 " Custom mappings
-map <C-t> :NERDTreeToggle<CR>
-map <C-s> :w<CR>
-" map <C-z> :undo<CR>
-" map <C-y> :redo<CR>
-map <F9> :call CompileIt()<CR>
+nnoremap <C-t> :NERDTreeToggle<CR>
+nnoremap <C-h> 0
 nnoremap <C-j> 2j2<C-e>
 nnoremap <C-k> 2k2<C-y>
+nnoremap <C-l> $
+tnoremap <Esc> <C-\><C-n>
+nnoremap <C-Space> :call Term_toggle(10)<cr>
+tnoremap <C-Space> <C-\><C-n>:call Term_toggle(10)<cr>
 
-:function! CompileIt()
-:    execute "silent !clear && make"
-:    execute "!./" . expand("%<")
-:endfunction
+" javacomplete2
+autocmd FileType java setlocal omnifunc=javacomplete#Complete
+nmap <F17> <Plug>(JavaComplete-Imports-Add)
+imap <F17> <Plug>(JavaComplete-Imports-Add)
+nmap <F4> <Plug>(JavaComplete-Imports-AddMissing)
+imap <F4> <Plug>(JavaComplete-Imports-AddMissing)
+nmap <F5> <Plug>(JavaComplete-Imports-RemoveUnused)
+imap <F5> <Plug>(JavaComplete-Imports-RemoveUnused)
 
 " NERDCommenter
 let mapleader=','
@@ -74,34 +81,52 @@ let g:ale_sign_warning = '>>'
 let g:ale_c_gcc_options = '-std=c99 -Wall'
 let g:ale_c_clang_options = '-std=c99 -Wall'
 
-" better key bindings for UltiSnipsExpandTrigger
-" let g:UltiSnipsExpandTrigger = "<tab>"
-" let g:UltiSnipsJumpForwardTrigger = "<tab>"
-" let g:UltiSnipsJumpBackwardTrigger = "<s-tab>"
+" Neoformat
+let g:neoformat_java_astyle = {
+            \ 'exe':   'astyle', 
+            \ 'args':  ['--mode=java', '--style=kr', '-f -p -xg -U'],
+            \ 'stdin': 1,
+			\}
+let g:neoformat_enabled_java = ['astyle']
+" run Neoformat on :w
+augroup astyle
+  autocmd!
+  autocmd BufWritePre * Neoformat
+augroup END
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#rc()
+" Deoplete
+let g:deoplete#enable_at_startup = 1
+let g:deoplete#omni_patterns = {}
+let g:deoplete#omni_patterns.java = '[^. *\t]\.\w*'
+let g:deoplete#sources = {}
+let g:deoplete#sources._ = []
+let g:deoplete#file#enable_buffer_path = 1
 
-Plugin 'VundleVim/Vundle.vim'
+call plug#begin('~/.vim/plugged')
 
-Plugin 'tpope/vim-fugitive'
-Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
-Plugin 'tpope/vim-surround'
-Plugin 'scrooloose/nerdtree'
-Plugin 'scrooloose/nerdcommenter'
-Plugin 'raimondi/delimitmate'
-Plugin 'terryma/vim-multiple-cursors'
-Plugin 'lervag/vimtex'
-Plugin 'w0rp/ale'
-Plugin 'honza/vim-snippets'
-Plugin 'SirVer/ultisnips'
-Plugin 'itchyny/lightline.vim'
-" Plugin 'christoomey/vim-tmux-navigator'
-Plugin 'morhetz/gruvbox'
+Plug 'tpope/vim-fugitive'
+Plug 'rstacruz/sparkup', { 'rtp': 'vim/' }
+Plug 'tpope/vim-surround'
+Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
+Plug 'scrooloose/nerdcommenter'
+Plug 'raimondi/delimitmate'
+Plug 'terryma/vim-multiple-cursors'
+Plug 'lervag/vimtex'
+Plug 'w0rp/ale'
+Plug 'honza/vim-snippets'
+Plug 'SirVer/ultisnips'
+Plug 'itchyny/lightline.vim'
+Plug 'mattn/emmet-vim'
+Plug 'artur-shaik/vim-javacomplete2'
+Plug 'majutsushi/tagbar'
+" Plug 'christoomey/vim-tmux-navigator'
+Plug 'morhetz/gruvbox'
+Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
+Plug 'shougo/denite.nvim'
+Plug 'sbdchd/neoformat'
+Plug 'brooth/far.vim'
+
+call plug#end()
+
 colorscheme gruvbox
 hi Normal ctermbg=NONE
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
