@@ -1,7 +1,15 @@
 set nocompatible
+filetype plugin indent on
 
 " open Tagbar if .java file
 autocmd VimEnter * if &ft ==# 'java' | call JavaCommands() | endif
+
+" auto toggle relativenumber on focus
+:augroup numbertoggle
+:  autocmd!
+:  autocmd BufEnter,FocusGained,InsertLeave * set relativenumber
+:  autocmd BufLeave,FocusLost,InsertEnter   * set norelativenumber
+:augroup END<Paste>
 
 :function JavaCommands()
 :	Tagbar
@@ -28,7 +36,7 @@ function! Term_toggle(height)
 endfunction
 
 set mouse=a
-set nu
+set number relativenumber
 set backspace=2
 set numberwidth=3
 set tabstop=4
@@ -47,8 +55,8 @@ let g:lightline = {
 " Custom mappings
 nnoremap <C-t> :NERDTreeToggle<CR>
 nnoremap <C-h> 0
-nnoremap <C-j> 2j2<C-e>
-nnoremap <C-k> 2k2<C-y>
+nnoremap <C-j> 3j3<C-e>
+nnoremap <C-k> 3k3<C-y>
 nnoremap <C-l> $
 tnoremap <Esc> <C-\><C-n>
 nnoremap <C-Space> :call Term_toggle(10)<cr>
@@ -58,13 +66,9 @@ tnoremap <C-Space> <C-\><C-n>:call Term_toggle(10)<cr>
 autocmd FileType java setlocal omnifunc=javacomplete#Complete
 nmap <F17> <Plug>(JavaComplete-Imports-Add)
 imap <F17> <Plug>(JavaComplete-Imports-Add)
-nmap <F4> <Plug>(JavaComplete-Imports-AddMissing)
-imap <F4> <Plug>(JavaComplete-Imports-AddMissing)
-nmap <F5> <Plug>(JavaComplete-Imports-RemoveUnused)
-imap <F5> <Plug>(JavaComplete-Imports-RemoveUnused)
+let mapleader=','
 
 " NERDCommenter
-let mapleader=','
 let g:NERDSpaceDelims = 1
 let g:NERDAltDelims_c = 1
 let g:NERDTrimTrailingWhitespace = 1
@@ -81,18 +85,23 @@ let g:ale_sign_warning = '>>'
 let g:ale_c_gcc_options = '-std=c99 -Wall'
 let g:ale_c_clang_options = '-std=c99 -Wall'
 
+let g:ale_linters = {
+\   'scss': ['sasslint'],
+\   'java': ['javac'],
+\}
+
 " Neoformat
 let g:neoformat_java_astyle = {
-            \ 'exe':   'astyle', 
-            \ 'args':  ['--mode=java', '--style=kr', '-f -p -xg -U'],
-            \ 'stdin': 1,
-			\}
+	\ 'exe':   'astyle', 
+	\ 'args':  ['--mode=java', '--style=kr', '-f -p -xg -U'],
+	\ 'stdin': 1,
+	\}
 let g:neoformat_enabled_java = ['astyle']
 " run Neoformat on :w
-augroup astyle
-  autocmd!
-  autocmd BufWritePre * Neoformat
-augroup END
+:augroup astyle
+:  autocmd!
+:  autocmd BufWritePre * Neoformat
+:augroup END
 
 " Deoplete
 let g:deoplete#enable_at_startup = 1
@@ -102,6 +111,24 @@ let g:deoplete#sources = {}
 let g:deoplete#sources._ = []
 let g:deoplete#file#enable_buffer_path = 1
 
+" Add custom menus
+let s:menus = {}
+
+let s:menus.main = {
+	\ 'description': 'Main menu'
+	\ }
+let s:menus.main.command_candidates = [
+	\ ['[Wiki] Goto default wiki', 'VimwikiIndex'],
+	\ ['[Java] Add import', 'JCimportsAdd'],
+	\ ['[Java] Add missing imports', 'JCimportsAddMissing'],
+	\ ['[Java] Remove unused imports', 'JCimportsRemoveUnused'],
+	\ ['[Java] New Java Class', 'JCclassNew'],
+	\ ['[Java] Generate getter and setter', 'JCgenerateAccessorSetterGetter'],
+	\ ['[Java] Generate abstract methods', 'JCgenerateAbstractMethods'],
+	\ ]
+
+nnoremap <C-P> :Denite menu:main -ignorecase<CR>
+
 call plug#begin('~/.vim/plugged')
 
 Plug 'tpope/vim-fugitive'
@@ -110,7 +137,7 @@ Plug 'tpope/vim-surround'
 Plug 'scrooloose/nerdtree', { 'on':  'NERDTreeToggle' }
 Plug 'scrooloose/nerdcommenter'
 Plug 'raimondi/delimitmate'
-Plug 'terryma/vim-multiple-cursors'
+" Plug 'terryma/vim-multiple-cursors'
 Plug 'lervag/vimtex'
 Plug 'w0rp/ale'
 Plug 'honza/vim-snippets'
@@ -125,8 +152,11 @@ Plug 'Shougo/deoplete.nvim', { 'do': ':UpdateRemotePlugins' }
 Plug 'shougo/denite.nvim'
 Plug 'sbdchd/neoformat'
 Plug 'brooth/far.vim'
+Plug 'vimwiki/vimwiki'
 
 call plug#end()
 
 colorscheme gruvbox
 hi Normal ctermbg=NONE
+
+call denite#custom#var('menu', 'menus', s:menus)

@@ -3767,3 +3767,4 @@ alias vim="nvim"
 # Local variables:
 # mode: sh
 # End:
+export PATH="/usr/local/sbin:$PATH"
